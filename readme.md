@@ -8,21 +8,20 @@ This repository explores and tries to undestland BLE technology.
 
 # Sub directories
 
-[server]server, We create an UART that sends single letters when connected 
-[clent](client) , Requres a display(M5) as we select what device to connect to with the buttons.
-// Create a break in the md file <BR>
-[hackrf-sniff](hack-rf) sniff. Sniffer software code from https://github.com/JiaoXianjun/BTLE
+    server, We create an UART that sends single letters when connected 
+    client , Requres a display(M5) as we select what device to connect to with the buttons.
+
+    [hackrf-sniff](hack-rf) sniff. Sniffer software code from https://github.com/JiaoXianjun/BTLE
 The major limitation of using HackRFOne as sniffer that it does not handle channel jumping so well.
 This is another sniffer, however bandwidth might be a problem. It tunes the HACKRF to 2427.0
-https://github.com/mikeryan/ice9-bluetooth-sniffer This has nice integration with wireshark.
+https://github.com/mikeryan/ice9-bluetooth-sniffer This has nice integration with wireshark. <BR>
 
-[i_beacon](iBeacon), Simple iBeacon  . <BR>
+    i_beacon, Simple iBeacon  
 
-The hci controller software Is from the examples direcory.
-$(HOME)/.platformio/packages/framework-espidf/examples/bluetooth/hci/controller_vhci_ble_adv
+    The hci controller software Is from the examples direcory.
+    $(HOME)/.platformio/packages/framework-espidf/examples/bluetooth/hci/controller_vhci_ble_adv
 
-[vci_ble_simulate](simulation), This is taken from qemu to allow simulation of the BLE controller over a socket.
-
+    [vci_ble_simulate](simulation), This is taken from qemu to allow simulation of the BLE controller over a socket.
 
 
 
@@ -30,9 +29,6 @@ $(HOME)/.platformio/packages/framework-espidf/examples/bluetooth/hci/controller_
 The Bluetooth LE system operates in the 2.4 GHz ISM band at 2400 - 2483.5 MHz. It uses 40 RF channels (each channel is 2 MHz wide). Channel 37,38 and 39 are advertiser channels.
 
 ![Alt text](BLEChannelHopping.png "BLE Channel Hopping")
-
-
-
 
 
 

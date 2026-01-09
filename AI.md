@@ -8,7 +8,7 @@ For example, here is an excerpt from the blufi_lib_sdk.h header file shipped wit
 
 #define BB_CTRL_REG                ((uint32_t *)(0xc2a48000))    //Address = 0xc2a48000 or  0xe3fda000 depending on stack pointer location
 //Register Declaration
-typedef struct tagBlutfirm {
+romtypedef struct tagBlutfirm {
     union {
         uint8_t bytes[4];
         __attribute__((packed))union {

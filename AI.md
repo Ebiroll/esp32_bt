@@ -1,5 +1,6 @@
 
 
+```
 The Baseband Control Register (BB_CTRL_REG) is a specific register related to the Bluetooth Low Energy (BTLE) functionality of the ESP32 module. Its address would depend on which Bluetooth stack you're using, because the register location may differ between ESP-BC, Bluez-compatible BT Classic drivers, or proprietary solutions by other vendors that support the ESP32 platform. Here, let me give you a general idea of how it works:
 
 When working on your own firmware using the ESP-IDF APIs, the required ESP_BLUFI_BASE definition header typically defines all necessary macros for various modules, including the Baseband controller unit. Then, you can use symbols such as BB_CTRL_REG_RSSI, BB_CTRL_REG_CHANNEL, BB_CTRL_REG_ADVERTISEMENT as pointers to access their respective fields inside the appropriate register(s) controlling the Bluetooth Subsystem.
@@ -25,9 +26,13 @@ typedef struct tagBlutfirm {
 typedef enum tagBlutfCtrl {
     BB_CTRL_REG_MAJOR_VERSION = 0x0 ,
     BB_CTRL_REG_MINOR_V
+```
+
 
 
 ## Open assistant
+
+```
 Can you explain the values of the typedef enum HCI_MSG .
 
 
@@ -215,7 +220,7 @@ ESP_ERROR_CHECK(retval == pdTRUE);
 In summary, btdm_task_post is a convenient function provided by ESP-IDF to submit requests for executing bluetooth management procedures to the BTM. By setting up callback functions in the host software, you can receive asynchronous replies once t
 
 
-
+```
 
 # Phy rom functions
 

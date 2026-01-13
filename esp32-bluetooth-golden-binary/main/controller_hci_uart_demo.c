@@ -8,7 +8,11 @@
 #include <string.h>
 #include "nvs_flash.h"
 #include "esp_bt.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
 #include "hal/uhci_periph.h"
+#else 
+#include "soc/uhci_periph.h"
+#endif
 #include "driver/uart.h"
 #include "esp_private/periph_ctrl.h" // for enabling UHCI module, remove it after UHCI driver is released
 #include "esp_log.h"
@@ -16,44 +20,39 @@
 #include "esp_bt.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
 extern int g_bt_plf_log_level;
 
 static const char *tag = "CONTROLLER_UART_HCI";
 
-static void basetimecnt_monitor_task(void *pvParameters)
-{
-    btdm_dev_t *btdm = (btdm_dev_t *)BTDM_PTR;
-    uint32_t prev_cnt = 0;
-    uint32_t curr_cnt = 0;
-    
-    ESP_LOGI(tag, "Starting BB_BASETIMECNT monitor task");
-    
-    // Read initial value
-    prev_cnt = btdm->BLEBASETIMECNT.BASETIMECNT;
-    
-    while (1) {
-        // Sleep for 1 second
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        
-        // Read current value
-        curr_cnt = btdm->BLEBASETIMECNT.BASETIMECNT;
-        
-        // Calculate the difference (handle 27-bit wrap-around)
-        uint32_t diff;
-        if (curr_cnt >= prev_cnt) {
-            diff = curr_cnt - prev_cnt;
-        } else {
-            // Counter wrapped around (27-bit counter max = 0x7FFFFFF)
-            diff = (0x7FFFFFF - prev_cnt) + curr_cnt + 1;
-        }
-        
-        ESP_LOGI(tag, "BB_BASETIMECNT: prev=0x%07"PRIx32" curr=0x%07"PRIx32" diff=%"PRIu32" (rate: %"PRIu32" Hz)",
-                 prev_cnt, curr_cnt, diff, diff);
-        
-        prev_cnt = curr_cnt;
+
+static  uint8_t vendor_cmd_set_mac[] = {
+    0x01,             // HCI Command Packet indicator
+    0x32, 0xFC,       // Vendor-specific Opcode (LE Set MAC)
+    0x06,             // Param length
+    0xAA,0xBB,0xCC,0xDD,0xEE,0xFF  // Example MAC
+};
+
+static void send_vendor_hci_cmd(void) {
+    int times=0;
+    // Wait until VHCI is ready
+    while ((times++<3) && !esp_vhci_host_check_send_available()) {
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
+    esp_vhci_host_send_packet(vendor_cmd_set_mac, sizeof(vendor_cmd_set_mac));
 }
 
+static void basetimecnt_monitor_task(void *pvParameters) {
+    btdm_dev_t *btdm = (btdm_dev_t *)BTDM_PTR;
+    while (1) {
+        send_vendor_hci_cmd();
+        printf("BLEBDADDRL: 0x%08"PRIx32"\n", btdm->BLEBDADDRL);
+        printf("BLEBDADDRU: 0x%08"PRIx32"\n", btdm->BLEBDADDRU.val);
+ 
+        vendor_cmd_set_mac[5]++; // Increment last byte of MAC for visibility
+        vTaskDelay(pdMS_TO_TICKS(30000)); // 30s
+    }
+}
 
 void print_all_btdm_registers(void)
 {
@@ -160,5 +159,5 @@ void app_main(void)
     }
 
     // Create task to monitor BB_BASETIMECNT register rate
-    xTaskCreate(basetimecnt_monitor_task, "basetimecnt_mon", 2048, NULL, 5, NULL);
+    xTaskCreate(basetimecnt_monitor_task, "bt_hci_sender", 2048, NULL, 5, NULL);
 }

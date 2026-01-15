@@ -1,87 +1,78 @@
-# Map Bluetooth Stack including ld_env
+# Map Bluetooth Stack: Descriptors, ACL Environments, and Global Driver State
 # @category: ESP32_BT
 
-from ghidra.program.model.data import StructureDataType, WordDataType, ArrayDataType, ByteDataType, UnsignedIntegerDataType
+from ghidra.program.model.data import StructureDataType, WordDataType, ArrayDataType, ByteDataType, UnsignedIntegerDataType, PointerDataType
 from ghidra.program.model.util import CodeUnitInsertionException
 
-def map_bt_stack():
+def map_bt_stack_final():
     dtm = currentProgram.getDataTypeManager()
 
-    # --- Structure Definitions ---
-    rx_desc = StructureDataType("em_bt_rx_desc_t", 0)
-    rx_desc.add(WordDataType(), 2, "ctrl", "Status/Flags")
-    rx_desc.add(WordDataType(), 2, "bt_header", "BT Link Header")
-    rx_desc.add(WordDataType(), 2, "acl_header", "ACL/Data Header")
-    rx_desc.add(WordDataType(), 2, "rxdataptr", "EM Offset to Data")
-    rx_desc.add(WordDataType(), 2, "rxrfstat", "RSSI / Channel")
-    rx_desc.add(WordDataType(), 2, "rate", "Modulation Info")
-    rx_desc.add(WordDataType(), 2, "stat", "HW Completion Status")
+    # --- 1. em_bt_rx_desc_t (14 bytes) ---
+    rx_desc = StructureDataType("em_bt_rx_desc_t", 14)
+    rx_desc.add(WordDataType(), 2, "ctrl", "Bit 15: Done/Ready")
+    rx_desc.add(WordDataType(), 2, "bt_header", "LT_ADDR, Type, etc.")
+    rx_desc.add(WordDataType(), 2, "acl_header", "LLID, Length")
+    rx_desc.add(WordDataType(), 2, "rxdataptr", "Offset to EM Data")
+    rx_desc.add(WordDataType(), 2, "rxrfstat", "RSSI and Channel info")
+    rx_desc.add(WordDataType(), 2, "rate", "Modulation info")
+    rx_desc.add(WordDataType(), 2, "stat", "HW Status flags")
     rx_desc = dtm.addDataType(rx_desc, None)
 
-    tx_desc = StructureDataType("em_bt_tx_desc_t", 0)
+    # --- 2. em_bt_tx_desc_t (20 bytes) ---
+    tx_desc = StructureDataType("em_bt_tx_desc_t", 20)
     tx_desc.add(WordDataType(), 2, "txctrl", "Bit 15: Ready Flag")
-    tx_desc.add(WordDataType(), 2, "bt_header", "BT Link Header")
-    tx_desc.add(WordDataType(), 2, "acl_header", "ACL/Data Header")
-    tx_desc.add(WordDataType(), 2, "txdataptr", "EM Offset to Data")
+    tx_desc.add(WordDataType(), 2, "bt_header", "Link Layer Header")
+    tx_desc.add(WordDataType(), 2, "acl_header", "Data Layer Header")
+    tx_desc.add(WordDataType(), 2, "txdataptr", "Offset to EM Data")
     tx_desc.add(WordDataType(), 2, "mic", "MIC/CRC Seed")
-    tx_desc.add(WordDataType(), 2, "txrate", "Power/Modulation")
-    tx_desc.add(WordDataType(), 2, "txstat", "HW Status")
-    tx_desc.add(WordDataType(), 2, "txheaderptr", "EM Offset to Header")
-    tx_desc.add(UnsignedIntegerDataType(), 4, "timestamp", "Target TX Clock")
+    tx_desc.add(WordDataType(), 2, "txrate", "Power and Rate")
+    tx_desc.add(WordDataType(), 2, "txstat", "Hardware status update")
+    tx_desc.add(WordDataType(), 2, "txheaderptr", "EM Header buffer offset")
+    tx_desc.add(UnsignedIntegerDataType(), 4, "timestamp", "TX Target Clock")
     tx_desc = dtm.addDataType(tx_desc, None)
 
-    link_ctrl = StructureDataType("bt_link_ctrl_t", 0)
-    link_ctrl.add(WordDataType(), 2, "state_flags", "Connection State")
-    link_ctrl.add(ArrayDataType(ByteDataType(), 6, 1), 6, "remote_bdaddr", "Peer MAC Address")
-    link_ctrl.add(ArrayDataType(ByteDataType(), 16, 1), 16, "unknown_gap", "")
-    link_ctrl.add(WordDataType(), 2, "enc_status", "Encryption Status")
-    link_ctrl.add(ArrayDataType(ByteDataType(), 76, 1), 76, "remaining_data", "")
-    link_ctrl = dtm.addDataType(link_ctrl, None)
+    # --- 3. bt_acl_env_t (252 bytes / 0xFC) ---
+    # Based on r_ld_acl_start logic
+    acl_env = StructureDataType("bt_acl_env_t", 252)
+    acl_env.add(PointerDataType(), 4, "ea_ptr", "Element header")
+    acl_env.add(UnsignedIntegerDataType(), 4, "unknown_p2", "")
+    acl_env.add(UnsignedIntegerDataType(), 4, "conn_handle", "HCI Connection Handle")
+    acl_env.add(UnsignedIntegerDataType(), 4, "anchor_point", "BT Clock Anchor")
+    acl_env.add(WordDataType(), 2, "bit_offset", "Slot Bit Offset")
+    acl_env.add(WordDataType(), 2, "conn_state", "State (e.g., 0x46A)")
+    acl_env.add(ByteDataType(), 1, "priority", "RWIP Priority")
+    acl_env.add(ByteDataType(), 1, "hop_inc", "Hop Increment")
+    acl_env.add(WordDataType(), 2, "int_mask", "Interrupt Mask (0x203)")
+    acl_env.add(PointerDataType(), 4, "start_cb", "ld_acl_evt_start_cbk")
+    acl_env.add(PointerDataType(), 4, "stop_cb", "ld_acl_evt_stop_cbk")
+    acl_env.add(PointerDataType(), 4, "canceled_cb", "ld_acl_evt_canceled_cbk")
+    acl_env.insert(0x8C, UnsignedIntegerDataType(), 4, "bd_addr_low", "Remote MAC [0:3]")
+    acl_env.insert(0x96, WordDataType(), 2, "bd_addr_high", "Remote MAC [4:5]")
+    acl_env.insert(0xB2, ByteDataType(), 1, "link_id", "ACL Link ID")
+    acl_env.insert(0xB3, ByteDataType(), 1, "role", "0=Master, 1=Slave")
+    acl_env = dtm.addDataType(acl_env, None)
 
-    # Map NVDS Environment
-    #nvds_struct = StructureDataType("nvds_env_t", 0)
-    #nvds_struct.add(ByteDataType(), 4, "read_func", "")
-    #nvds_struct.add(ByteDataType(), 4, "write_func", "")
-    #nvds_struct.add(ByteDataType(), 4, "erase_func", "")
-    #nvds_struct.add(UnsignedIntegerDataType(), 4, "flash_base", "")
-    #nvds_struct.add(UnsignedIntegerDataType(), 4, "total_size", "")
-    #nvds_struct.add(UnsignedIntegerDataType(), 4, "magic_handle", "")
+    # --- 4. ld_env_t (Global State) ---
+    ld_env_struct = StructureDataType("ld_env_t", 512)
+    ld_env_struct.add(ArrayDataType(ByteDataType(), 426, 1), 426, "padding", "")
+    ld_env_struct.add(ByteDataType(), 1, "curr_rxdesc_index", "Current RX Ring Index")
+    ld_env_struct = dtm.addDataType(ld_env_struct, None)
 
-    #nvds_struct = dtm.addDataType(nvds_struct, None)
-    
-    # Apply to the nvds_env address found in your l32r instruction
-    #apply_bt_data("0x3ffb8364", "NVDS_ENV", nvds_struct, 1)
-
-    def apply_bt_data(addr_hex, name, datatype, count=1):
+    def apply_type(addr_hex, name, datatype, count=1):
         addr = parseAddress(addr_hex)
         if currentProgram.getMemory().getBlock(addr) is None:
-            print("SKIPPED: {} at {} - No memory block defined here!".format(name, addr_hex))
+            print("SKIPPED: {} at {} - Memory missing!".format(name, addr_hex))
             return
-
-        full_type = datatype
-        if count > 1:
-            full_type = ArrayDataType(datatype, count, datatype.getLength())
-        
-        size = full_type.getLength()
+        full_type = datatype if count == 1 else ArrayDataType(datatype, count, datatype.getLength())
         removeDataAt(addr)
-        clearListing(addr, addr.add(size - 1))
-        
-        try:
-            createData(addr, full_type)
-            createLabel(addr, name, True)
-            print("MAPPED: {} at {}".format(name, addr_hex))
-        except:
-            print("FAILED: Conflict at {}".format(addr_hex))
+        clearListing(addr, addr.add(full_type.getLength() - 1))
+        createData(addr, full_type)
+        createLabel(addr, name, True)
 
-    # --- Execute ---
-    print("Starting Bluetooth Meta-Mapping...")
-    apply_bt_data("0x3ffb1dee", "BT_LINK_CONTROL_BLOCKS", link_ctrl, 2)
-    apply_bt_data("0x3ffb2382", "BT_RX_DESCRIPTORS", rx_desc, 4)
-    apply_bt_data("0x3ffb23ba", "BT_TX_DESCRIPTORS", tx_desc, 4)
-    apply_bt_data("0x3ffb9510", "ld_env", ByteDataType(), 512) # Mapped as raw bytes for now
-    
-    fhs = parseAddress("0x3ffb262c")
-    if currentProgram.getMemory().getBlock(fhs):
-        createLabel(fhs, "BT_FHS_PACKET_BUFFER", True)
+    # Execute Mapping
+    apply_type("0x3ffb2382", "BT_RX_DESCRIPTORS", rx_desc, 4)
+    apply_type("0x3ffb23ba", "BT_TX_DESCRIPTORS", tx_desc, 4)
+    apply_type("0x3FFB8258", "ld_acl_env_ptrs", PointerDataType(acl_env), 8)
+    apply_type("0x3ffb9510", "ld_env", ld_env_struct, 1)
 
-map_bt_stack()
+map_bt_stack_final()

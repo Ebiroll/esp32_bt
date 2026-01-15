@@ -182,6 +182,41 @@ typedef struct {
 
 
 #if 0
+
+typedef struct {
+    uint32_t p1;                  /* Offset 0x00: EA element header */
+    uint32_t p2;                  /* Offset 0x04 */
+    uint32_t conn_handle;         /* Offset 0x08: Connection handle */
+    uint32_t anchor_point;        /* Offset 0x0c: BT Clock anchor */
+    uint16_t bit_offset;          /* Offset 0x10: 625us slot bit offset */
+    uint16_t conn_state;          /* Offset 0x12: State flags (0x46a) */
+    uint8_t  priority;            /* Offset 0x16: RWIP Priority */
+    uint8_t  hop_inc;             /* Offset 0x17: Hop increment (3) */
+    uint16_t int_mask;            /* Offset 0x18: Interrupt mask (0x203) */
+    void     *start_cb;           /* Offset 0x1c: ld_acl_evt_start_cbk */
+    void     *stop_cb;            /* Offset 0x20: ld_acl_evt_stop_cbk */
+    void     *canceled_cb;        /* Offset 0x24: ld_acl_evt_canceled_cbk */
+    /* ... Padding/Unknown ... */
+    uint32_t curr_lmp_msg;        /* Offset 0x68: Current LMP message */
+    uint32_t clk_offset;          /* Offset 0x84: Clock offset */
+    uint32_t sync_clk_offset;     /* Offset 0x88 */
+    uint32_t bd_addr_low;         /* Offset 0x8c: Remote BDADDR [0:3] */
+    uint16_t bd_addr_high;        /* Offset 0x96: Remote BDADDR [4:5] */
+    uint16_t last_sync_clk;       /* Offset 0x98 */
+    uint16_t t_poll;              /* Offset 0x9a: Poll interval (32000) */
+    uint16_t drift;               /* Offset 0x9c */
+    /* ... Control bytes ... */
+    uint8_t  link_id;             /* Offset 0xb2: ACL Link ID (param_1) */
+    uint8_t  role;                /* Offset 0xb3: Master/Slave (param_2) */
+    uint8_t  rx_active;           /* Offset 0xb4: RX status */
+    uint8_t  sniff_state;         /* Offset 0xb5: Sniff mode tracking */
+    uint8_t  max_slots;           /* Offset 0xb7: Max slots (0xfa) */
+    uint8_t  master_flag;         /* Offset 0xbc: Master/Slave bit */
+    uint8_t  link_up;             /* Offset 0xc6: Active flag (1) */
+} bt_acl_env_t;
+
+
+
     void *sleep_exit_p3;       /* 39 */
     void *bt_wakeup_req;       /* 40 */
     void *bt_wakeup_end;       /* 41 */

@@ -38,6 +38,18 @@ def map_bt_stack():
     link_ctrl.add(ArrayDataType(ByteDataType(), 76, 1), 76, "remaining_data", "")
     link_ctrl = dtm.addDataType(link_ctrl, None)
 
+    # Map NVDS Environment
+    nvds_struct = StructureDataType("nvds_env_t", 0)
+    nvds_struct.add(PointerDataType(), 4, "read_func", "")
+    nvds_struct.add(PointerDataType(), 4, "write_func", "")
+    nvds_struct.add(PointerDataType(), 4, "erase_func", "")
+    nvds_struct.add(UnsignedIntegerDataType(), 4, "flash_base", "")
+    nvds_struct.add(UnsignedIntegerDataType(), 4, "total_size", "")
+    nvds_struct.add(UnsignedIntegerDataType(), 4, "magic_handle", "")
+
+    # Apply to the nvds_env address found in your l32r instruction
+    apply_bt_data("0x3ffb8364", "NVDS_ENV", nvds_struct, 1)
+
     def apply_bt_data(addr_hex, name, datatype, count=1):
         addr = parseAddress(addr_hex)
         if currentProgram.getMemory().getBlock(addr) is None:

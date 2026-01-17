@@ -4,6 +4,16 @@
 typedef unsigned int uint;
 typedef unsigned char byte;
 
+
+struct ghidra_plf_funcs_t {
+    void (*r_plf_init)(void);                 /* 0x00: Hardware/Interrupt Init */
+    void (*r_plf_reset)(void);                /* 0x04: Hardware Reset */
+    uint32_t (*r_plf_enter_critical)(void);   /* 0x08: Disable Ints, return old PS */
+    void (*r_plf_exit_critical)(uint32_t);    /* 0x0c: Restore Ints using saved PS */
+    bool (*r_plf_it_is_enabled)(void);        /* 0x10: Check if interrupts enabled */
+    void (*r_plf_assert)(const char*, int);   /* 0x14: Firmware Panic/Assert */
+};
+
 struct ghidra_ip_t {
     void (*r_bt_util_buf_init)(void);                               /* 0x00 */
     int* (*r_bt_util_buf_lmp_tx_alloc)(void);                      /* 0x04 */
@@ -76,6 +86,18 @@ typedef struct {
     uint32_t timestamp;    /* 0x10: Precise TX time scheduled */
 } em_bt_txdesc_20_t;
 
+typedef struct {
+    void* field0_0x0;   // 0x00: Pointer to allocated "ENV" memory
+    uint32_t field1_0x4;   // 0x04: Calculated SIZE of "ENV" memory
+    void* field2_0x8;   // 0x08: Pointer to allocated "MSG" memory
+    uint32_t field3_0xc;   // 0x0c: Calculated SIZE of "MSG" memory
+    void* field4_0x10;  // 0x10: Pointer to allocated "NORET" memory
+    uint32_t field5_0x14;  // 0x14: Calculated SIZE of "NORET" memory
+    int      field6_0x18;  // 0x18: Pointer to HCI environment (if mode & 2)
+    int      field7_0x1c;  // 0x1c: Pointer to VHCI environment (if mode & 2 == 0)
+    void* field8_0x20;  // 0x20: Pointer to base of HCI/VHCI allocated block
+    // Total structure size is 0x30 bytes based on malloc_internal(0x30)
+}  ghidra_env_p_t;
 
 
 #if 0
@@ -106,7 +128,7 @@ typedef struct {
 
 #endif
 
-struct ghidra_modules_t {
+struct ghidra_modules_funcs_t {
   void *co_list_init;
   void *co_list_pool_init;
   void *co_list_push_back;

@@ -5,5 +5,9 @@ cmake_minimum_required(VERSION 3.16)
 # This example uses an extra component for common functions for Bluetooth HCI layer.
 set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/examples/bluetooth/hci/hci_common_component)
 
+
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+
+idf_build_set_property(MINIMAL_BUILD OFF)
+
 project(ble_adv)

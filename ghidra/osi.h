@@ -4,6 +4,26 @@
 typedef unsigned int uint;
 typedef unsigned char byte;
 
+#if 0
+// Ti start advertising.
+p *(int *) &btdm_pwr_state =1
+
+// btdm_pwr_state
+0 ACTIVENormal operation; radio and high-speed clocks are on.
+1 SLEEP_PENDINGr_rwip_sleep has finished calculations; waiting for HW to acknowledge.
+2 DEEP_SLEEPHardware is powered down; waiting for Wakeup/Slot IRQ.
+
+// btdm_sllep_error
+1	Sleep is disabled in sdk_config.
+2	co_list_push_front (Index 8) failed; a module is busy.
+3	State Conflict: Attempted to sleep while btdm_pwr_state was not 0.
+4	_rwip_env is not initialized or in an invalid state.
+5	co_list_push_back (Index 0xc) failed; internal list management error.
+12 (0xc)	Semaphore g_waking_sleeping_sem is locked by another task.
+
+p *(int *) &btdm_pwr_state =1
+
+#endif
 
 struct ghidra_plf_funcs_t {
     void (*r_plf_init)(void);                 /* 0x00: Hardware/Interrupt Init */

@@ -33880,6 +33880,107 @@ IDINTEN[4]: DU Interrupt.</description>
         <usage>registers</usage>
       </addressBlock>
       <registers>
+      <register>
+          <name>PMU_CTRL</name>
+          <description>Power Management Unit control register</description>
+          <addressOffset>0x100</addressOffset>
+          <access>read-write</access>
+        </register>
+
+        <register>
+          <name>BLECONF</name>
+          <description>RW BLE hardware configuration register</description>
+          <addressOffset>0x208</addressOffset>
+          <fields>
+            <field>
+              <name>DMMODE</name>
+              <description>Bluetooth baseband core dual mode</description>
+              <bitOffset>31</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>COEX</name>
+              <description>RF coexistence mechanism</description>
+              <bitOffset>21</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLK_SEL</name>
+              <description>Operating frequency (in MHz)</description>
+              <bitOffset>8</bitOffset>
+              <bitWidth>6</bitWidth>
+            </field>
+            <field>
+              <name>INTMODE</name>
+              <description>Interruption Mode (0: Pulse, 1: Level)</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+          </fields>
+        </register>
+
+        <register>
+          <name>BLEBASETIMECNT</name>
+          <description>RW BLE base timer configuration register</description>
+          <addressOffset>0x21C</addressOffset>
+          <fields>
+            <field>
+              <name>BASETIMECNT</name>
+              <description>Current value of the 625us slot counter</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>27</bitWidth>
+            </field>
+          </fields>
+        </register>
+
+        <register>
+          <name>BB_DEEPSLCNTL</name>
+          <description>Deep sleep control register</description>
+          <addressOffset>0x230</addressOffset>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>EXTWKUP</name>
+              <description>External wake-up enable</description>
+              <bitOffset>31</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>DEEPSL_TIME</name>
+              <description>Duration of the sleep in 312.5us units</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>16</bitWidth>
+            </field>
+          </fields>
+        </register>
+
+        <register>
+          <name>BB_DEEPSLSTAT</name>
+          <description>Deep sleep status register</description>
+          <addressOffset>0x238</addressOffset>
+          <fields>
+            <field>
+              <name>DEEPSL_STAT</name>
+              <description>Deep sleep status (1: In sleep/pending, 0: Awake)</description>
+              <bitOffset>15</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+          </fields>
+        </register>
+
+        <register>
+          <name>BB_FINECNTCORR</name>
+          <description>Fine timer correction register</description>
+          <addressOffset>0x240</addressOffset>
+          <access>read-write</access>
+        </register>
+        
+        <register>
+          <name>BB_BASETIMECNTCORR</name>
+          <description>Base timer correction register</description>
+          <addressOffset>0x244</addressOffset>
+          <access>read-write</access>
+        </register>
         <register>
           <name>BTCNTL</name>
           <description>BR/EDR control register</description>
